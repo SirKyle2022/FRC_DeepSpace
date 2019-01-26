@@ -13,9 +13,23 @@ import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.commands.ExampleCommand;
-import frc.robot.subsystems.ExampleSubsystem;
+
+import frc.robot.commands.PneumaticArmExtend;
+import frc.robot.commands.PneumaticArmOff;
+import frc.robot.commands.PneumaticArmRetract;
 import frc.robot.subsystems.DriveTrain;
+import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.subsystems.GrabberArmSubsystem;
+
+import frc.robot.commands.SlideForward;
+import frc.robot.commands.SlideStop;
+import frc.robot.subsystems.Slide;
+import frc.robot.commands.StopLiftCommand;
+import frc.robot.subsystems.LiftSubsystem;
+import frc.robot.commands.DownLiftCommand;
+import frc.robot.commands.DriveTrainMove;
+import frc.robot.commands.UpLiftCommand;
+
 
 /*
 	
@@ -31,11 +45,13 @@ import frc.robot.subsystems.DriveTrain;
  * project.
  */
 public class Robot extends TimedRobot {
-  public static final DriveTrain m_driveTrain = null;
+  public static final Subsystem m_GrabberArmSubsystem = null;
+  public static GrabberArmSubsystem m_GrabberSubsystem = new GrabberArmSubsystem();
   public static ExampleSubsystem m_subsystem = new ExampleSubsystem();
-  public static DriveTrain m_train = new DriveTrain();
+  public static DriveTrain m_drivetrain = new DriveTrain();
+  public static LiftSubsystem l_Subsystem = new LiftSubsystem();
   public static OI m_oi;
-  public static Subsystem driveTrain;
+  public static Slide m_slide = new Slide();
 
   Command m_autonomousCommand;
   SendableChooser<Command> m_chooser = new SendableChooser<>();
@@ -47,9 +63,10 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     m_oi = new OI();
-    m_chooser.setDefaultOption("Default Auto", new ExampleCommand());
+    m_chooser.setDefaultOption("Default Auto", new DriveTrainMove()); 
     // chooser.addOption("My Auto", new MyAutoCommand());
     SmartDashboard.putData("Auto mode", m_chooser);
+
   }
 
   /**
@@ -112,7 +129,7 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousPeriodic() {
     Scheduler.getInstance().run();
-    m_driveTrain.update(m_oi.getForwardValue(), m_oi.getTurnValue());
+    m_drivetrain.update(m_oi.getForwardValue(), m_oi.getTurnValue());
   }
 
   @Override
@@ -123,6 +140,7 @@ public class Robot extends TimedRobot {
     // this line or comment it out.
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
+      
     }
   }
 
@@ -132,7 +150,7 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
     Scheduler.getInstance().run();
-    m_driveTrain.update(m_oi.getForwardValue(), m_oi.getTurnValue());
+    
   }
 
   /**
