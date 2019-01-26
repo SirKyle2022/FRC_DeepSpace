@@ -7,6 +7,10 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.buttons.Button;
+import edu.wpi.first.wpilibj.buttons.JoystickButton;
 /**
  * This class is the glue that binds the controls on the physical operator
  * interface to the commands and command groups that allow control of the robot.
@@ -39,4 +43,23 @@ public class OI {
   // Start the command when the button is released and let it run the command
   // until it is finished as determined by it's isFinished method.
   // button.whenReleased(new ExampleCommand());
+
+  private static final GenericHID driverController = null;
+
+public Joystick driver = new Joystick(0);
+  
+  int CLIMB_BUTTON = 1;
+  public JoystickButton xButton = new JoystickButton(driver, CLIMB_BUTTON);
+
+  public OI () {}
+ 
+  public double getForwardValue() {
+    System.out.println(driver.getRawAxis(1));
+    return driver.getRawAxis(1);
+  }
+  
+  public double getTurnValue() {
+    System.out.println(driver.getRawAxis(4));
+    return driver.getRawAxis(4);
+  }
 }
