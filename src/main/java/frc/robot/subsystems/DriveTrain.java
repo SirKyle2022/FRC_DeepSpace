@@ -14,9 +14,13 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDSourceType;
+import edu.wpi.first.wpilibj.RobotDrive;
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
+import edu.wpi.first.wpilibj.Joystick.AxisType;
 
 /**
  * Add your docs here.
@@ -27,105 +31,68 @@ public class DriveTrain extends Subsystem {
   private WPI_TalonSRX m_backleft;
   private WPI_TalonSRX m_frontright;
   private WPI_TalonSRX m_backright;
-  //create drive train and drive train sides objects
-  private SpeedControllerGroup m_left;
-  private SpeedControllerGroup m_right;
-  private DifferentialDrive m_drive;
-  //create encoders
-  private Encoder rightEncoder = new Encoder(1, 2, true, EncodingType.k4X);
-  private Encoder leftEncoder = new Encoder(3, 4, false, EncodingType.k4X);
+  private static final int TIMEOUT_MS = 1000;
+  //feet per second velocity
+  private static double m_vel_fps;
+  private static double m_vel_encps;
+  private static final double COUNTSPERFOOT = 1800;
+  private static final double MAXVELOCITY = 5;
 
-  public DriveTrain(){
+
+
+  public DriveTrain() {
     //initialize + set objects created above
     m_frontleft = new WPI_TalonSRX(RobotMap.frontLeftMotorCanId());
     m_backleft = new WPI_TalonSRX(RobotMap.backLeftMotorCanId());
-    m_left = new SpeedControllerGroup(m_frontleft, m_backleft);
-
     m_frontright = new WPI_TalonSRX(RobotMap.frontRightMotorCanId());
     m_backright = new WPI_TalonSRX(RobotMap.backRightMotorCanId());
-    m_right = new SpeedControllerGroup(m_frontright, m_backright);
+    configTalons();
+    m_vel_fps = 0;
+    m_vel_encps = 0;
     //m_left.setInverted(true); invert left side
     //Configure the RobotDrive to reflect the fact that all our motors are
     //Wired backwards and our drivers sensitivity preferences.
-
-    m_drive = new DifferentialDrive(m_left, m_right);
-
-    m_drive.setSafetyEnabled(true);
-    m_drive.setExpiration(0.1);
-    m_drive.setSensitivity(0.5);
-    m_drive.setMaxOutput(1.0);
-    m_drive.setInvertedMotor(RobotDrive.MotorType.kFrontleft, true);
-    m_drive.setInvertedMotor(RobotDrive.MotorType.kBackleft, true);
-    m_drive.setInvertedMotor(RobotDrive.MotorType.kFrontright, true);
-    m_drive.setInvertedMotor(RobotDrive.MotorType.kBackright, true);
-
-    //Configure encoders
-    rightEncoder.setPIDSourceType(PIDSourceType.kDisplacement);
-    leftEncoder.setPIDSourceType(PIDSourceType.kDisplacement);
-
-    if (Robot.isReal()) { // Converts to feet
-      rightEncoder.setDistancePerPulse(0.0785398);
-      leftEncoder.setDistancePerPulse(0.0785398);
-    } else { // Convert to feet 4in diameter wheels with 360 tick stimulated
-      // encoders
-      rightEncoder.setDistancePerPulse(
-        (4.0/* in */ * Math.PI) / (360.0 * 12.0/* in/ft */));
-      leftEncoder.setDistancePerPulse(
-          (4.0/* in */ * Math.PI) / (360.0 * 12.0/* in/ft */));
     }
-    
-    /**
-     * @ param joy
-     * Xbox style joystick to use as the input for arcade drive.
-     */
-    public void arcadeDrive(Joystick joy) {
-      drive.arcadeDrive(joy.getY(), joy.getRawAxis(4));
-    }
-
-    SpeedControllerGroup leftMotors = new
-    SpeedControllerGroup(m_frontleft, m_backleft);
-
-    SpeedControllerGroup rightMotors = new
-    SpeedControllerGroup (m_frontright, m_backright);
-  }
-  public void aracdeDrive(double moveSpeed, double rotateSpeed) {
-    differentialDrive.arcadeDrive(moveSpeed, rotateSpeed);
-  }
 
   public void update(double y, double z){
-    m_drive.arcadeDrive(y, z);
   }
 
+  public void configTalons() {
+    /* first choose the sensor */
+    m_frontright.selectProfileSlot(0, 0);
+    m_frontright.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative);
+    m_frontright.setSensorPhase(false);
+
+    m_frontleft.selectProfileSlot(0, 0);
+    m_frontleft.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative);
+    m_frontleft.setSensorPhase(false);
+    //_talon.configEncoderCodesPerRev(XXX), // if using FeedbackDevice.QuadEncoder
+    //_talon.configPotentiometerTurns(XXX), // if using FeedbackDevice.AnalogEncoder or AnalogPot
+
+	/* set closed loop gains in slot0 */
+    m_frontright.config_kP(0, 0, TIMEOUT_MS);
+    m_frontright.config_kI(0, 0, TIMEOUT_MS);
+    m_frontright.config_kD(0, 0, TIMEOUT_MS);
+    m_frontright.config_kF(0, 0, TIMEOUT_MS);
+
+    m_frontleft.config_kP(0, 0, TIMEOUT_MS);
+    m_frontleft.config_kI(0, 0, TIMEOUT_MS);
+    m_frontleft.config_kD(0, 0, TIMEOUT_MS);
+    m_frontleft.config_kF(0, 0, TIMEOUT_MS);
+
+    m_frontright.configMaxIntegralAccumulator(0, m_maxIntegral, TIMEOUT_MS);
+    m_frontright.configContinuousCurrentLimit(m_maxAmps, TIMEOUT_MS);
+    m_frontright.configPeakCurrentLimit(m_maxAmps, TIMEOUT_MS);
+
+    m_frontleft.configMaxIntegralAccumulator(0, m_maxIntegral, TIMEOUT_MS);
+    m_frontleft.configContinuousCurrentLimit(m_maxAmps, TIMEOUT_MS);
+    m_frontleft.configPeakCurrentLimit(m_maxAmps, TIMEOUT_MS);
+
+    m_backleft.set(ControlMode.Follower, RobotMap.backLeftMotorCanId());
+    m_backright.set(ControlMode.Follower, RobotMap.backRightMotorCanId());
+  }
 
   @Override
   public void initDefaultCommand() {
-    setDefaultCommand(new DriveWithJoystick());
   }
-
-  /**
-   * @param joy
-  * Xbox style joystick to use as the input for arcade drive.
-  */
-  public void arcadeDrive(Joystick joy) {
-    drive.arcadeDrive(joy.getY(), joy.getRawAxis(4));
-  }
-
-/**
- * @return The encoder getting the distance and speed of left side of the drivetrain.
- */
-public Encoder getLeftEncoder() {
-  return leftEncoder;
-}
-
-/**
- * @return The encoder getting the distance and speed of right side of the drivetrain.
- */
-public Encoder getRightEncoder() {
-  return rightEncoder;
-}
-
-public void arcadeDrive(double moveSpeed, double rotateSpeed) {}
-public void stop() {
-  drive.arcadeDrive(0, 0);
-}
 }
