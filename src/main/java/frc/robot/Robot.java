@@ -27,7 +27,7 @@ import frc.robot.subsystems.Slide;
 import frc.robot.commands.StopLiftCommand;
 import frc.robot.subsystems.LiftSubsystem;
 import frc.robot.commands.DownLiftCommand;
-import frc.robot.commands.DriveTrainMove;
+import frc.robot.commands.DriveCommand;
 import frc.robot.commands.UpLiftCommand;
 
 
@@ -52,6 +52,7 @@ public class Robot extends TimedRobot {
   public static LiftSubsystem l_Subsystem = new LiftSubsystem();
   public static OI m_oi;
   public static Slide m_slide = new Slide();
+public static Object m_map;
 
   Command m_autonomousCommand;
   SendableChooser<Command> m_chooser = new SendableChooser<>();
@@ -63,7 +64,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     m_oi = new OI();
-    m_chooser.setDefaultOption("Default Auto", new DriveTrainMove()); 
+    m_chooser.setDefaultOption("Default Auto", new DriveCommand()); 
     // chooser.addOption("My Auto", new MyAutoCommand());
     SmartDashboard.putData("Auto mode", m_chooser);
 
